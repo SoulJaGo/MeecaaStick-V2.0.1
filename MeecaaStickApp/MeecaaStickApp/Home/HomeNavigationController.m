@@ -24,8 +24,7 @@
     
     UITabBarItem *tabBarItem = [[UITabBarItem alloc] initWithTitle:nil image:[[UIImage imageNamed:@"shouye"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] selectedImage:[[UIImage imageNamed:@"shouyexuanzhong"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]];
     self.tabBarItem = tabBarItem;
-    self.tabBarItem.title = @"首页";
-    
+    self.tabBarItem.title = @"首页";    
 }
 
 

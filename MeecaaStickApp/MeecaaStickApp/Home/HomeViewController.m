@@ -196,21 +196,30 @@
 - (void)setUpNoDeviceView{
     self.NavItemView.backgroundColor = [UIColor clearColor];
 
-    self.noDeviceView = [[UIView alloc] initWithFrame:CGRectMake(0, 100, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height - 149)];
-    self.noDeviceView.backgroundColor = [UIColor orangeColor];
-    UIImage *_image = [UIImage imageNamed:@"set_about_icon"];
-    UIImageView *_imageView = [[UIImageView alloc] initWithImage:_image];
-    _imageView.frame = CGRectMake(30, 30, 45, 45);
-    _imageView.tag = 100;
-    [self.noDeviceView addSubview:_imageView];
+    self.noDeviceView = [[UIView alloc] initWithFrame:self.view.bounds];
+    self.noDeviceView.backgroundColor = UIVIEW_BACKGROUND_COLOR;
+    UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake((self.view.bounds.size.width - 200)/2, 64 + 50, 200, 200)];
+    [imageView setImage:[UIImage imageNamed:@"yuanquan"]];
+    [self.noDeviceView addSubview:imageView];
     
-    UILabel *timeLabel = [[UILabel alloc] initWithFrame:CGRectMake(100, 30, 200, 50)];
-    timeLabel.backgroundColor  = [UIColor redColor];
-    timeLabel.text = @"还没有选择设备";
-    [self.noDeviceView addSubview:timeLabel];
+    
+    UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
+    
+    btn.frame = CGRectMake((self.view.bounds.size.width - 120)/2, CGRectGetMaxY(imageView.frame) + 50, 120, 120);
+    
+    [btn setBackgroundImage:[UIImage imageNamed:@"anniu"] forState:UIControlStateNormal];
+    
+    [btn addTarget:self action:@selector(onClickSelect) forControlEvents:UIControlEventTouchUpInside];
+    
+    [self.noDeviceView addSubview:btn];
+    
     [self.view addSubview:self.noDeviceView];
     [self.selectDeviceBtn setTitle:@"米开设备" forState:UIControlStateNormal];
 
+}
+
+- (void)onClickSelect {
+    [SVProgressHUD showInfoWithStatus:@"请选择设备!"];
 }
 
 - (void)SetUpBeanView{

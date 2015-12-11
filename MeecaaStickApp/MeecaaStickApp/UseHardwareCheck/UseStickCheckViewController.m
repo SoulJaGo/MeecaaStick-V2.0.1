@@ -36,6 +36,7 @@
     UIImageView *startViewTwo;
     UIImageView *startViewThree;
     
+    NSTimer *progressTimer;
     /**
      *	12 / 10 周四
      */
@@ -67,9 +68,9 @@
     
     NSTimer *timer3; //    定时采样
     
-    // float  timercount;
+    // float  timercount3;
     //测温时间计数器
-    int timercount;
+    int timercount3;
     //温度保存记录临时字符串
     NSString *strStoreTemp;
     
@@ -104,7 +105,7 @@
     [super viewDidLoad];
     
     [self setUpView];
-    
+    press = NO;
     
     /**
      *	12 / 10
@@ -113,7 +114,7 @@
     progressView = [[LargerCircularProgressView alloc] initWithFrame:CGRectMake(8, 8, 184, 184)];
 //    [circularImageViewOne addSubview:progressView];
 //    [circularImageViewTwo addSubview:progressView];
-//    [circularImageViewTwo addSubview:progressView];
+//    [circularImageViewThree addSubview:progressView];
     [NSTimer scheduledTimerWithTimeInterval:0.01 target:self selector:@selector(progressChanged) userInfo:nil repeats:NO];
     
     self.quickTimeCount = 0;
@@ -290,59 +291,19 @@
     [_scrollView addSubview:startViewThree];
     
     for (int i = 0; i < 3; i++) {
-//        circularImageView = [[UIImageView alloc] initWithImage:_image];
-//        circularImageView.frame = CGRectMake(self.scrollView.frame.size.width * i + (self.view.frame.size.width - 200) / 2, 30, 200, 200);
-//        [_scrollView addSubview:circularImageView];
-        
-//        timeLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.scrollView.frame.size.width * i + 240, 0, 120, 30)];
-//        timeLabel.tag = 100 + i;
-//        timeLabel.textColor  = NAVIGATIONBAR_BACKGROUND_COLOR;
-//        timeLabel.text = @"00.00";
-//        timeLabel.font = [UIFont systemFontOfSize:30];
-//        [_scrollView addSubview:timeLabel];
-        
-//        temperatureLabel = [[UILabel alloc] initWithFrame:CGRectMake((circularImageView.frame.size.width - 100) / 2, 70, 100, 40)];
-////        temperatureLabel.center = _imageView.center;
-//        temperatureLabel.tag  = 1000 + i;
-//        temperatureLabel.text = @"--.-℃";
-//        temperatureLabel.textAlignment = NSTextAlignmentCenter;
-//        temperatureLabel.font = [UIFont systemFontOfSize:30];
-//        temperatureLabel.textColor = NAVIGATIONBAR_BACKGROUND_COLOR;
-//        
-//        [circularImageView addSubview:temperatureLabel];
-        
-        
-//        UILabel *typeLabel = [[UILabel alloc] initWithFrame:CGRectMake((circularImageView.frame.size.width - 80) / 2, 110, 80, 40)];
-//        typeLabel.tag  = 10000 + i;
-//        typeLabel.textAlignment = NSTextAlignmentCenter;
-//        typeLabel.textColor = NAVIGATIONBAR_BACKGROUND_COLOR;
-//        if (typeLabel.tag == 10000) {
-//            typeLabel.text = @"常规测温";
-//        }else if (typeLabel.tag == 10001){
-//            typeLabel.text = @"快速测温";
-//        }
-//        [circularImageView addSubview:typeLabel];
-//        UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
-//        button.frame = CGRectMake(self.view.frame.size.width * i + 30, 230, 250, 45);
-//        button.backgroundColor = [UIColor redColor];
-//        [button addTarget:self action:@selector(clickToOnceCheck) forControlEvents:UIControlEventTouchUpInside];
-//        if (i == 0) {
-//            [button setTitle:@"点击开始快速测体温" forState:UIControlStateNormal];
-//        }else if (i == 1){
-//            [button setTitle:@"点击开始温度检测" forState:UIControlStateNormal];
-//        }else if (i == 2){
-//            [button setTitle:@"点击开始基础体温" forState:UIControlStateNormal];
-//        }
-        
-//        UIImage *start = [UIImage imageNamed:@"anniu"];
-//        UIImageView *startView = [[UIImageView alloc] initWithImage:start];
-//        startView.frame = CGRectMake(self.scrollView.frame.size.width * i + (self.view.frame.size.width - 120) / 2, 260, 120, 120);
-//        startView.userInteractionEnabled = YES;
-//        startView.tag = i;
-//        [startView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(clickToOnceCheck)]];
-//        [_scrollView addSubview:startView];
-        
+        UILabel *typeLabel = [[UILabel alloc] initWithFrame:CGRectMake(kScreen_Width * i + (kScreen_Width - 80) / 2, 140, 80, 40)];
+        typeLabel.tag  = 10000 + i;
+        typeLabel.textAlignment = NSTextAlignmentCenter;
+        typeLabel.textColor = NAVIGATIONBAR_BACKGROUND_COLOR;
+        if (typeLabel.tag == 10000) {
+            typeLabel.text = @"常规测温";
+        }else if (typeLabel.tag == 10001){
+            typeLabel.text = @"快速测温";
+        }
+        [self.scrollView addSubview:typeLabel];
     }
+    
+
     [self.pageControl addTarget:self action:@selector(clickToChangePage:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:self.scrollView];
 }
@@ -364,14 +325,34 @@
     self.normalErrorCount = 0;
     
     if ([self isHeadsetPluggedIn]) {
-        if (flag == 1) {
-            return;
+        if (press == YES) {
+            UIAlertController *alertVC = [UIAlertController alertControllerWithTitle:@"提醒" message:@"是否结束测温？" preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self stopCheck];
+                    press = NO;
+                    self.scrollView.scrollEnabled = YES;
+                });
+            }];
+            UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+                
+            }];
+            [alertVC addAction:okAction];
+            [alertVC addAction:cancelAction];
+            [self presentViewController:alertVC animated:YES completion:nil];
+            
+        }else{
+            
+            [self onClickCheck];
+            [circularImageViewOne addSubview:progressView];
+            progressTimer = [NSTimer scheduledTimerWithTimeInterval:0.1818181818 target:self selector:@selector(progressChanged) userInfo:nil repeats:YES];
+            
+            self.scrollView.scrollEnabled = NO;
+            
+            press = YES;
+            flag = 1;
         }
-        [self onClickCheck];
-        [circularImageViewOne addSubview:progressView];
-        [NSTimer scheduledTimerWithTimeInterval:0.1818181818 target:self selector:@selector(progressChanged) userInfo:nil repeats:YES];
         
-        flag = 1;
         
     } else {
         [SVProgressHUD showErrorWithStatus:@"请将体温棒连接手机！"];
@@ -421,17 +402,17 @@
     [self deleteTempFiles];
     NSTimeInterval time = [[NSDate date] timeIntervalSince1970];
     long long int date = (long long int)time;
-    timercount = 0;
+    timercount3 = 0;
     strStoreTemp=@"";
     
     /*每隔一秒执行一次*/
     timer3 = [NSTimer scheduledTimerWithTimeInterval: 1
                                               target: self
-                                            selector: @selector(handleTimer:)
+                                            selector: @selector(handleTimer3:)
                                             userInfo: nil
                                              repeats: YES];
     
-    [[NSRunLoop currentRunLoop] addTimer:timer3 forMode:NSRunLoopCommonModes];
+//    [[NSRunLoop currentRunLoop] addTimer:timer3 forMode:NSRunLoopCommonModes];
     
     NSString *docDir = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
     playName = [NSString stringWithFormat:@"%@/play_%lli.raw", docDir,date];//创建录音文件
@@ -448,7 +429,7 @@
     
     /*每0.1秒执行一次*/
     timer2 = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(playTimer:) userInfo:nil repeats:YES];
-    [[NSRunLoop currentRunLoop] addTimer:timer2 forMode:NSRunLoopCommonModes];
+//    [[NSRunLoop currentRunLoop] addTimer:timer2 forMode:NSRunLoopCommonModes];
     /*播放音乐*/
     [avAudioPlayer play];
 }
@@ -492,7 +473,7 @@
             [recorder record];
             //启动定时器
             timer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(levelTimer:) userInfo:nil repeats:YES];
-            [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
+//            [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
             
         } else
         {
@@ -583,30 +564,30 @@
         } else {
             if (itemp == 9999 || itemp == - 9999) {
                 [self stopCheck];
-                [self presentViewController:self.drawerController animated:NO completion:^{
-                    [SVProgressHUD showErrorWithStatus:@"超出测温范围!"];
-                }];
+//                [self presentViewController:self.drawerController animated:NO completion:^{
+//                    [SVProgressHUD showErrorWithStatus:@"超出测温范围!"];
+//                }];
                 return;
             } else if (itemp == 7777) {
                 [self stopCheck];
 //                [self presentViewController:[[MainTabBarController alloc] init] animated:NO completion:^{
 //                    [SVProgressHUD showErrorWithStatus:@"请联系客服!"];
 //                }];
-                [self presentViewController:self.drawerController animated:YES completion:^{
-                    [SVProgressHUD showErrorWithStatus:@"请联系客服!"];
-                }];
+//                [self presentViewController:self.drawerController animated:YES completion:^{
+//                    [SVProgressHUD showErrorWithStatus:@"请联系客服!"];
+//                }];
                 return;
             } else if (itemp == -8888) {
                 [self stopCheck];
-                [self presentViewController:self.drawerController animated:NO completion:^{
-                    [SVProgressHUD showErrorWithStatus:@"请重新测温!"];
-                }];
+//                [self presentViewController:self.drawerController animated:NO completion:^{
+//                    [SVProgressHUD showErrorWithStatus:@"请重新测温!"];
+//                }];
                 return;
             } else if (itemp == -6666) {
                 [self stopCheck];
-                [self presentViewController:self.drawerController animated:NO completion:^{
-                    [SVProgressHUD showErrorWithStatus:@"请重新测温!"];
-                }];
+//                [self presentViewController:self.drawerController animated:NO completion:^{
+//                    [SVProgressHUD showErrorWithStatus:@"请重新测温!"];
+//                }];
                 return;
             } else {
                 if (flag == 1) {
@@ -625,7 +606,7 @@
 //                    NSLog(@"quickTimeCount:%d-resultTemp:%f",self.quickTimeCount - 1,resultTemp);
 //                    if (resultTemp == -1) { //返回结果如果为-1表示继续传入温度值
 //                        return;
-//                    } else if (resultTemp == -2 ) { //返回结果-2或者timercount大于20表示溢出
+//                    } else if (resultTemp == -2 ) { //返回结果-2或者timercount3大于20表示溢出
 //                        return;
 //                    } else if (resultTemp > 0 ) { //返回结果大于0时表示监测出来温度
 //                        //设置预测温度
@@ -644,9 +625,9 @@
             return;
         } else {
             [self stopCheck];
-            [self presentViewController:self.drawerController animated:NO completion:^{
-                [SVProgressHUD showErrorWithStatus:@"请重新连接耳机孔，再次测温。"];
-            }];
+//            [self presentViewController:self.drawerController animated:NO completion:^{
+//                [SVProgressHUD showErrorWithStatus:@"请重新连接耳机孔，再次测温。"];
+//            }];
         }
     }
 }
@@ -683,6 +664,7 @@
     }
     
     if (timer3) {
+        [timer3 setFireDate:[NSDate distantFuture]];
         [timer3 invalidate];
         timer3 = nil;
     }
@@ -690,20 +672,29 @@
     if ([avAudioPlayer isPlaying]) {
         [avAudioPlayer stop];
     }
+    
+    if (progressTimer) {
+        [progressTimer setFireDate:[NSDate distantFuture]];
+        [progressTimer invalidate];
+        progressTimer = nil;
+    }
 }
 
 /**
  *  处理定时器Timer3
  */
-- (void) handleTimer: (NSTimer *) timer3
+- (void) handleTimer3: (NSTimer *) timer3
 {
-    timercount++;//时间计数自增
+    timercount3++;//时间计数自增
     
+    if (timercount3 >= 180) {
+        
+    }
     /*开始播放*/
     [self play];
     
-    int min = timercount%60;
-    int sec = timercount/60;
+    int min = timercount3%60;
+    int sec = timercount3/60;
     if (flag == 1) {
         timeLabelOne.text = [NSString stringWithFormat:@"%@:%@",[self getTimeStr:sec], [self getTimeStr:min]];
     }else if (flag == 2){
