@@ -1,0 +1,58 @@
+{
+
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "36a93739-3b2d-41c3-82fe-915338ec1388++6092",
+
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "36a93739-3b2d-41c3-82fe-915338ec1388++5326",
+
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+    "36a93739-3b2d-41c3-82fe-915338ec1388++6092" : {
+
+    },
+    "36a93739-3b2d-41c3-82fe-915338ec1388++5326" : {
+
+    }
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+
+    "36a93739-3b2d-41c3-82fe-915338ec1388++5326" : 0,
+    "ADE105B5E71C88C0ABF755C6B17CA1BD822CE0AB" : 0,
+    "36a93739-3b2d-41c3-82fe-915338ec1388++6092" : 0,
+    "2A69382049197061CE78F7CD7EDCEF7A23DC8166" : 0
+
+    "36a93739-3b2d-41c3-82fe-915338ec1388++5326" : 0
+
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "98F1C7F9-9C24-4956-A837-B390F6CB6741",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+
+    "36a93739-3b2d-41c3-82fe-915338ec1388++5326" : "",
+    "ADE105B5E71C88C0ABF755C6B17CA1BD822CE0AB" : "MeecaaStick-V2.0.0\/MeecaaStickApp\/MeecaaStickApp\/Lib\/MJPhotoBrowser\/",
+    "36a93739-3b2d-41c3-82fe-915338ec1388++6092" : "MeecaaStick-V2.0.1\/",
+    "2A69382049197061CE78F7CD7EDCEF7A23DC8166" : "MeecaaStick-V2.0.0\/"
+
+    "36a93739-3b2d-41c3-82fe-915338ec1388++5326" : "ios\/"
+
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "MeecaaStickApp",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "MeecaaStick-V2.0.1\/MeecaaStickApp\/MeecaaStickApp.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "svn:\/\/121.199.40.188",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Subversion",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "36a93739-3b2d-41c3-82fe-915338ec1388++5326"
+
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "svn:\/\/121.199.40.188",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Subversion",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "36a93739-3b2d-41c3-82fe-915338ec1388++6092"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/azxfire\/MJPhotoBrowser.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "ADE105B5E71C88C0ABF755C6B17CA1BD822CE0AB"
+
+    }
+  ]
+}

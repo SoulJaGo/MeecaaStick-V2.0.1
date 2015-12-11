@@ -1,0 +1,13 @@
+//
+//  AddMedicalRecordViewController.h
+//  MeecaaStickApp
+//
+//  Created by SoulJa on 15/11/30.
+//  Copyright © 2015年 SoulJa. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface AddMedicalRecordViewController : UITableViewController
+
+@end
