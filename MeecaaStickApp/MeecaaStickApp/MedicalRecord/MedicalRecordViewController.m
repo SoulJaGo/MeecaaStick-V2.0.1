@@ -122,7 +122,6 @@
             [self.tableView reloadData];
             [self.tableView.footer endRefreshing];
         } else {
-            [SVProgressHUD showInfoWithStatus:@"没有更多的数据了!"];
             [self.tableView.footer endRefreshing];
         }
         
@@ -142,7 +141,6 @@
 }
 
 - (void)initDiaryDataEndSuccessNotification {
-    [SVProgressHUD showInfoWithStatus:@"没有更多的数据了!"];
     [self.tableView.footer endRefreshing];
 }
 
