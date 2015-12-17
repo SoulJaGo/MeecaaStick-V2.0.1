@@ -10,6 +10,7 @@
 #import "sys/utsname.h"
 
 @implementation GlobalTool
+static  GlobalTool *_singleton = nil;
 /**
  *  单例模式
  */
@@ -22,6 +23,15 @@
         }
     });
     return sharedInstance;
+}
+
+//实现单例
++ (GlobalTool *)sharedSingleton{
+    //内部只创建一次
+    if (_singleton == nil) {
+        _singleton = [[GlobalTool alloc] init];
+    }
+    return _singleton;
 }
 
 - (instancetype)init {

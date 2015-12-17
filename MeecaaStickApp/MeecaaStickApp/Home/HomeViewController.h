@@ -8,6 +8,8 @@
 
 #import <UIKit/UIKit.h>
 
+#import "UseStickCheckViewController.h"
+
 @interface HomeViewController : UIViewController
 
 @end

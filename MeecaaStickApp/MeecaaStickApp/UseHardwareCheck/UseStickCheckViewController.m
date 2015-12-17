@@ -8,14 +8,19 @@
 
 #import "UseStickCheckViewController.h"
 #import "LargerCircularProgressView.h"
+#import "AddMedicalRecordViewController.h"
+#import "MedicalRecordNavigationController.h"
 #import <AudioToolbox/AudioToolbox.h>
 #import <AVFoundation/AVFoundation.h>
+
 /**
  *  控制音量所需库文件
  */
 #import <MediaPlayer/MPVolumeView.h>
 #import "TestDecoder.h"
 #import "Function.h"
+
+#import "AddMedicalRecordViewController.h"
 
 @interface UseStickCheckViewController ()<UIScrollViewDelegate> {
     UILabel *temperatureLabelOne;
@@ -37,6 +42,9 @@
     UIImageView *startViewThree;
     
     NSTimer *progressTimer;
+    
+    UIView           *maskViewOne;          //测温时段内的透明层，用于隔绝用户点击其他控件
+    UIView           *maskViewTwo;
     /**
      *	12 / 10 周四
      */
@@ -85,14 +93,15 @@
     BOOL bcheck_flag;
     float dT1;
     
-    BOOL press;
-    int flag;
+    BOOL press; //用于标记开始测温按钮是否被按下
+    int flag;   //用于标记是哪种类型的测温，以便相应的控件去显示数据
 }
 
 @property (weak, nonatomic) IBOutlet UIPageControl *pageControl;
 @property (nonatomic,strong) UIScrollView *scrollView;
 @property (nonatomic,strong) MMDrawerController * drawerController;
 
+@property (nonatomic,strong) AddMedicalRecordViewController *addMedicalVC;
 
 @property (nonatomic,assign) int quickTimeCount;//计数次数
 
@@ -104,9 +113,9 @@
 - (void)viewDidLoad{
     [super viewDidLoad];
     
+    
     [self setUpView];
     press = NO;
-    
     /**
      *	12 / 10
      */
@@ -208,17 +217,20 @@
 
 - (void)viewDidAppear:(BOOL)animated{
     [super viewDidAppear:animated];
-    
+
     //监听调节音量
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(volumeChanged:) name:@"AVSystemController_SystemVolumeDidChangeNotification" object:nil];
-    
-    /*监听拔出耳机*/
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(routeChange:) name:AVAudioSessionRouteChangeNotification object:nil];
+//    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(volumeChanged:) name:@"AVSystemController_SystemVolumeDidChangeNotification" object:nil];
+//    
+//    /*监听拔出耳机*/
+//    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(routeChange:) name:AVAudioSessionRouteChangeNotification object:nil];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
     [super viewDidDisappear:animated];
-
+    
+    progressView.progress = 0;
+    press = NO;
+    self.scrollView.scrollEnabled = YES;
     [self stopCheck];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:@"AVSystemController_SystemVolumeDidChangeNotification" object:nil];
@@ -250,9 +262,9 @@
     [self.scrollView addSubview:circularImageViewThree];
     
     //添加时间label
-    timeLabelOne = [[UILabel alloc] initWithFrame:CGRectMake(240, 0, 120, 30)];
-    timeLabelTwo = [[UILabel alloc] initWithFrame:CGRectMake(kScreen_Width + 240, 0, 120, 30)];
-    timeLabelThree = [[UILabel alloc] initWithFrame:CGRectMake(kScreen_Width * 2 + 240, 0, 120, 30)];
+    timeLabelOne = [[UILabel alloc] initWithFrame:CGRectMake((self.view.frame.size.width - 100) / 2 + 130, 0, 100, 30)];
+    timeLabelTwo = [[UILabel alloc] initWithFrame:CGRectMake(kScreen_Width + (self.view.frame.size.width - 100) / 2 + 130, 0, 100, 30)];
+    timeLabelThree = [[UILabel alloc] initWithFrame:CGRectMake(kScreen_Width * 2 + (self.view.frame.size.width - 100) / 2 + 130, 0, 100, 30)];
     timeLabelOne.textColor = timeLabelTwo.textColor = timeLabelThree.textColor = NAVIGATIONBAR_BACKGROUND_COLOR;
     timeLabelOne.text = timeLabelTwo.text = timeLabelThree.text = @"00.00";
     timeLabelOne.font = timeLabelTwo.font = timeLabelThree.font = [UIFont systemFontOfSize:30];
@@ -323,7 +335,9 @@
 - (void)clickToOnceCheck{
     //常规测温错误次数
     self.normalErrorCount = 0;
-    
+    if (press == NO) {
+        progressView.progress = 0;
+    }
     if ([self isHeadsetPluggedIn]) {
         if (press == YES) {
             UIAlertController *alertVC = [UIAlertController alertControllerWithTitle:@"提醒" message:@"是否结束测温？" preferredStyle:UIAlertControllerStyleAlert];
@@ -346,11 +360,13 @@
             [self onClickCheck];
             [circularImageViewOne addSubview:progressView];
             progressTimer = [NSTimer scheduledTimerWithTimeInterval:0.1818181818 target:self selector:@selector(progressChanged) userInfo:nil repeats:YES];
-            
+            timeLabelOne.text = @"00.00";
             self.scrollView.scrollEnabled = NO;
             
             press = YES;
             flag = 1;
+            
+            [self addMaskView];
         }
         
         
@@ -678,6 +694,10 @@
         [progressTimer invalidate];
         progressTimer = nil;
     }
+    //结束测温把按钮状态置为no
+    press = NO;
+    
+    [self removeMaskView];
 }
 
 /**
@@ -688,7 +708,21 @@
     timercount3++;//时间计数自增
     
     if (timercount3 >= 180) {
+        UIStoryboard *board = [UIStoryboard storyboardWithName:@"Second" bundle:nil];
+        AddMedicalRecordViewController *vc = [board instantiateViewControllerWithIdentifier:@"AddMedicalRecordViewController"];
+        MedicalRecordNavigationController *nav = [[MedicalRecordNavigationController alloc] initWithRootViewController:vc];
+        //开始传值
+        if (flag == 1) {
+//            [GlobalTool sharedSingleton].receivedTempStr = temperatureLabelOne.text;
+            [GlobalTool sharedSingleton].receivedTempStr = [temperatureLabelOne.text substringToIndex:4];
+        }else if (flag == 2){
+            [GlobalTool sharedSingleton].receivedTempStr = temperatureLabelTwo.text;
+        }else if (flag == 3) {
+            [GlobalTool sharedSingleton].receivedTempStr = temperatureLabelThree.text;
+        }
+        [GlobalTool sharedSingleton].presentView = YES;//标记是体温棒测温页面跳转过去的
         
+        [self presentViewController:nav animated:YES completion:nil];
     }
     /*开始播放*/
     [self play];
@@ -734,12 +768,12 @@
  *  判断耳机是否被拔出
  */
 -(void)routeChange:(NSNotification *)notification{
-    NSString *temperatureType = @"";
-    if (checkType == 1) {
-        temperatureType = @"1";
-    } else if(checkType == 2 ) {
-        temperatureType = @"0";
-    }
+//    NSString *temperatureType = @"";
+//    if (checkType == 1) {
+//        temperatureType = @"1";
+//    } else if(checkType == 2 ) {
+//        temperatureType = @"0";
+//    }
     
     NSDictionary *dic=notification.userInfo;
     int changeReason= [dic[AVAudioSessionRouteChangeReasonKey] intValue];
@@ -750,8 +784,11 @@
         //原设备为耳机则暂停
         if ([portDescription.portType isEqualToString:@"Headphones"]) {
             [self stopCheck];
-            [self presentViewController:[[MainTabBarController alloc] init] animated:NO completion:^{
-                [SVProgressHUD showInfoWithStatus:@"体温棒已拔出，请重新测温。"];
+//            [self presentViewController:[[MainTabBarController alloc] init] animated:NO completion:^{
+//                [SVProgressHUD showInfoWithStatus:@"体温棒已拔出，请重新测温。"];
+//            }];
+            [self presentViewController:self.drawerController animated:YES completion:^{
+                [SVProgressHUD showErrorWithStatus:@"体温棒已拔出，请重新测温！"];
             }];
             return;
         }
@@ -770,9 +807,28 @@
     
     if (volume < 1.0) {
         [self stopCheck];
-        [self presentViewController:[[MainTabBarController alloc] init] animated:NO completion:^{
-            [SVProgressHUD showErrorWithStatus:@"请将音量调到最大"];
+//        [self presentViewController:[[MainTabBarController alloc] init] animated:NO completion:^{
+//            [SVProgressHUD showErrorWithStatus:@"请将音量调到最大"];
+//        }];
+        [self presentViewController:self.drawerController animated:YES completion:^{
+            [SVProgressHUD showErrorWithStatus:@"请将音量调到最大！"];
         }];
     }
+}
+
+
+/**
+ *	12 / 16 添加 / 移除透明层
+ */
+- (void)addMaskView {
+    maskViewOne = [[UIView alloc] initWithFrame:CGRectMake(0, 20, kScreen_Width, 44)];
+    maskViewTwo = [[UIView alloc] initWithFrame:CGRectMake(0, kScreen_Height - 49, kScreen_Width, 49)];
+    maskViewOne.backgroundColor = maskViewTwo.backgroundColor = [UIColor clearColor ];
+    [[UIApplication sharedApplication].keyWindow addSubview:maskViewOne];
+    [[UIApplication sharedApplication].keyWindow addSubview:maskViewTwo];
+}
+-(void)removeMaskView {
+    [maskViewOne removeFromSuperview];
+    [maskViewTwo removeFromSuperview];
 }
 @end

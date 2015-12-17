@@ -16,6 +16,8 @@
 #import "MMDrawerBarButtonItem.h"
 #import "UseBeanCheckViewController.h"
 #import "UseStickCheckViewController.h"
+#import "AddMedicalRecordViewController.h"
+
 @interface HomeViewController ()<UIScrollViewDelegate,UITableViewDelegate,UITableViewDataSource>{
     NSUserDefaults *userDefaults;
 }
@@ -62,6 +64,9 @@
     //设置Nav
     [self setupNav];
     
+//    UseStickCheckViewController *useStickVC = [[UseStickCheckViewController alloc] init];
+//    useStickVC.homeVC = self;
+    
     if ([[HttpTool shared] isConnectInternet]) {
         //监测版本升级
         [self checkLastVersion];
@@ -93,7 +98,7 @@
      设备列表
      */
     
-    self.deviceListTV = [[UITableView alloc] initWithFrame:CGRectMake(self.view.center.x - 100, -240, 200, 240) style:UITableViewStylePlain];
+    self.deviceListTV = [[UITableView alloc] initWithFrame:CGRectMake(self.view.center.x - 100, -240, 200, 158) style:UITableViewStylePlain];
     self.deviceListTV.scrollEnabled = NO;
     self.deviceListTV.delegate = self;
     self.deviceListTV.dataSource = self;
@@ -105,7 +110,7 @@
     if (self.deviceListTV.frame.origin.y == 64) {
         //收起
         [UIView animateWithDuration:0.2 delay:0 options:UIViewAnimationOptionCurveEaseIn animations:^{
-            self.deviceListTV.frame = CGRectMake(self.view.center.x - 100, -240, 200, 240);
+            self.deviceListTV.frame = CGRectMake(self.view.center.x - 100, -240, 200, 158);
             self.pullImageView.transform = CGAffineTransformMakeRotation(0);
         } completion:^(BOOL finished) {
             
@@ -113,7 +118,7 @@
     }else if (self.deviceListTV.frame.origin.y == -240){
         //展开
         [UIView animateWithDuration:0.2 delay:0 options:UIViewAnimationOptionCurveEaseIn animations:^{
-            self.deviceListTV.frame = CGRectMake(self.view.center.x - 100, 64, 200, 240);
+            self.deviceListTV.frame = CGRectMake(self.view.center.x - 100, 64, 200, 158);
             self.pullImageView.transform = CGAffineTransformMakeRotation(M_PI);
         } completion:^(BOOL finished) {
             
@@ -125,13 +130,11 @@
     NSLog(@"设备设置为棒子");
     int myInteger = 1;
     userDefaults = [NSUserDefaults standardUserDefaults];
-    //存储时，除NSNumber类型使用对应的类型意外，其他的都是使用setObject:forKey:
     [userDefaults setInteger:myInteger forKey:@"myInteger"];
     
     [userDefaults synchronize];
     self.NavItemView.backgroundColor = [UIColor clearColor];
 
-//    [self.scrollView removeFromSuperview];
     [self.stickView.view removeFromSuperview];
     [self.noDeviceView removeFromSuperview];
     [self.beanView.view removeFromSuperview];
@@ -143,53 +146,6 @@
     self.stickView.view.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.stickView.view];
     
-    /*
-    self.scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 100, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height - 149)];
-    self.scrollView.backgroundColor = [UIColor whiteColor];
-    
-    self.scrollView.contentSize = CGSizeMake(self.view.frame.size.width * 3, self.view.frame.size.height - 149);
-    _scrollView.showsVerticalScrollIndicator = NO;
-    _scrollView.showsHorizontalScrollIndicator= NO;
-    self.scrollView.pagingEnabled = YES;
-    self.scrollView.bounces = NO;
-    self.scrollView.delegate = self;
-    //往滚动视图上添加一组图片
-    for (int i = 0; i < 3; i++) {
-        UIImage *_image = [UIImage imageNamed:@"set_about_icon"];
-        UIImageView *_imageView = [[UIImageView alloc] initWithImage:_image];
-        _imageView.frame = CGRectMake(self.view.frame.size.width * i + 30, 30, 45, 45);
-        [_scrollView addSubview:_imageView];
-        
-        UILabel *timeLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.view.frame.size.width * i + 100, 30, 200, 50)];
-        timeLabel.backgroundColor  = [UIColor redColor];
-        timeLabel.text = @"这是体温棒测温时间的label";
-        [_scrollView addSubview:timeLabel];
-        
-        UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
-        button.frame = CGRectMake(self.view.frame.size.width * i + 30, 230, 250, 45);
-        button.backgroundColor = [UIColor redColor];
-        [button addTarget:self action:@selector(clickToOnceCheck) forControlEvents:UIControlEventTouchUpInside];
-        if (i == 0) {
-            [button setTitle:@"点击开始快速测体温" forState:UIControlStateNormal];
-        }else if (i == 1){
-            [button setTitle:@"点击开始温度检测" forState:UIControlStateNormal];
-        }else if (i == 2){
-            [button setTitle:@"点击开始基础体温" forState:UIControlStateNormal];
-        }
-        [_scrollView addSubview:button];
-    }
-    
-    self.pageControl = [[UIPageControl alloc] initWithFrame:CGRectMake(self.view.center.x - 50, 64, 100, 36)];
-    _pageControl.numberOfPages = 3;
-    //为分页数点设置颜色(设置没有选中的分页数点的颜色)
-    _pageControl.pageIndicatorTintColor = NAVIGATIONBAR_BACKGROUND_COLOR;
-    //为选中的分页数点设置颜色
-    _pageControl.currentPageIndicatorTintColor = [UIColor cyanColor];
-    _pageControl.currentPage = 0;
-    [_pageControl addTarget:self action:@selector(clickToChangePage:) forControlEvents:UIControlEventValueChanged];
-    [self.view addSubview:self.pageControl];
-    [self.view addSubview:self.scrollView];
-    */
     [self.selectDeviceBtn setTitle:@"米开体温棒" forState:UIControlStateNormal];
 }
 
@@ -253,38 +209,46 @@
 
 }
 
-////实现clickToChangePage方法
-//- (void)clickToChangePage:(UIPageControl *)sender{
-//    [self.scrollView setContentOffset:CGPointMake(self.view.frame.size.width * sender.currentPage, 0) animated:YES];//带有动画效果
-//}
-//
-////当scrollView上的视图已经减速完成时触发该方法(该方法不一定触发) *****
-//- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
-//    //得到分页数的下标
-//    _pageControl.currentPage = scrollView.contentOffset.x / self.view.frame.size.width;
-//    
-//}
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     [self.tabBarController.tabBar setHidden:NO];
+    
+    /*监听三分钟测温完成*/
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(finishCheck:) name:@"FinishStickOnceCheck" object:nil];
+    
+    //监听调节音量
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(volumeChanged:) name:@"AVSystemController_SystemVolumeDidChangeNotification" object:nil];
+    
+    /*监听拔出耳机*/
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(routeChange:) name:AVAudioSessionRouteChangeNotification object:nil];
+}
+- (void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"FinishStickOnceCheck" object:nil];
+
 }
 
+- (void)finishCheck:(NSNotification *)notification {
+    UIStoryboard *board = [UIStoryboard storyboardWithName:@"Second" bundle:nil];
+    AddMedicalRecordViewController *vc = [board instantiateViewControllerWithIdentifier:@"AddMedicalRecordViewController"];
+    [self presentViewController:vc animated:YES completion:nil];
+}
 /**
  *  监测版本升级
  */
-- (void)checkLastVersion
-{
+- (void)checkLastVersion {
+#warning -- ToDo
     //获取版本信息数据
-    NSMutableDictionary *versionDict = [[HttpTool shared] getLastVersion];
-    
-    NSNumber *status = [versionDict objectForKey:@"status"];
-    
-    if ([status isEqualToNumber:@0]) { //状态码为0表示不更新
-        return;
-    } else {
-        
-    }
+//    NSMutableDictionary *versionDict = [[HttpTool shared] getLastVersion];
+//    
+//    NSNumber *status = [versionDict objectForKey:@"status"];
+//    
+//    if ([status isEqualToNumber:@0]) { //状态码为0表示不更新
+//        return;
+//    } else {
+//        
+//    }
     
 }
 
@@ -423,4 +387,35 @@
     }
     return NO;
 }
+
+
+/**
+ *  2015-09-23 SoulJa
+ *  监听音量调节
+ */
+- (void)volumeChanged:(NSNotification *)notification {
+    CGFloat volume = [notification.userInfo[@"AVSystemController_AudioVolumeNotificationParameter"] floatValue];
+    if (volume < 1.0) {
+        [SVProgressHUD showErrorWithStatus:@"请将音量调到最大！"];
+    }
+}
+
+/**
+ *  判断耳机是否被拔出
+ */
+-(void)routeChange:(NSNotification *)notification {
+//    NSDictionary *dic=notification.userInfo;
+//    int changeReason= [dic[AVAudioSessionRouteChangeReasonKey] intValue];
+//    //等于AVAudioSessionRouteChangeReasonOldDeviceUnavailable表示旧输出不可用
+//    if (changeReason==AVAudioSessionRouteChangeReasonOldDeviceUnavailable) {
+//        AVAudioSessionRouteDescription *routeDescription=dic[AVAudioSessionRouteChangePreviousRouteKey];
+//        AVAudioSessionPortDescription *portDescription= [routeDescription.outputs firstObject];
+//        //原设备为耳机则暂停
+//        if ([portDescription.portType isEqualToString:@"Headphones"]) {
+//            [SVProgressHUD showErrorWithStatus:@"体温棒已拔出，请重新测温！"];
+//            return;
+//        }
+//    }
+}
+
 @end

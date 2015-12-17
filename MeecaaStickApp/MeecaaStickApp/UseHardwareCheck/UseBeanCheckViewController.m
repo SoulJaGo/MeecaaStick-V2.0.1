@@ -13,6 +13,9 @@
 #import "ZHPickView.h"
 #import "DACircularProgressView.h"
 #import "AFNetworking.h"
+#import "AddMedicalRecordViewController.h"
+#import "MedicalRecordNavigationController.h"
+
 
 #define GETColor(r, g, b,a)         [UIColor colorWithRed:(r)/255.0 green:(g)/255.0 blue:(b)/255.0 alpha:(a)]
 
@@ -51,7 +54,7 @@
     int      researchTime; //断连时长
     //获取温度
     NSString *TempStr;   //获取到的温度的字符串,用以在label上显示
-    float     maxTemp;           //30分钟之内温度的最大值
+    float     maxTemp;   //30分钟之内温度的最大值
     
     //圆环
     DACircularProgressView *progressView;
@@ -62,7 +65,8 @@
     ZHPickView       *pickview;      //选择器
     NSString         *peripheralIdStr;   //存储外围设备id的字符串，用于下次连接时判断
     NSString         *identifier;        //在搜索到外围设置以后存储
-    
+    UIView           *maskViewOne;          //测温时段内的透明层，用于隔绝用户点击其他控件
+    UIView           *maskViewTwo;
     //测温时间计数器
     int timercount;
     NSMutableString *mutStr;
@@ -125,7 +129,7 @@
     
     self._temperatureLab.backgroundColor = [UIColor clearColor];
     self._temperatureLab.text = @"--.-℃";
-    self._temperatureLab.font = [UIFont systemFontOfSize:30];
+    self._temperatureLab.font = [UIFont systemFontOfSize:28];
     self._temperatureLab.textAlignment = NSTextAlignmentCenter;
     self._temperatureLab.textColor = NAVIGATIONBAR_BACKGROUND_COLOR;
     [self.circular addSubview:self._temperatureLab];
@@ -175,10 +179,9 @@
         self.circularLeftEdge.constant = 20;
         self.maxTempBtnRightEdge.constant = 30;
         self.minTempBtnRightEdge.constant = 30;
-        self.startTopEdge.constant = 90;
-        self.startRightEdge.constant = 90;
+        self.startTopEdge.constant = 100;
+        self.startRightEdge.constant = 70;
         self.lineChartViewTopEdge.constant = 230;
-
     }
 }
 
@@ -331,6 +334,7 @@
         self._timeLabel.text = @"00.00.00";
         [researchTimer setFireDate:[NSDate distantFuture]];
         researchTimer = 0;
+        press = NO;
         //        [_timer setFireDate:[NSDate distantFuture]];
         //        [self finishTemp];
     }else if (_peripheralArray.count > 1 && _testPeripheral.state != CBPeripheralStateConnected){
@@ -424,6 +428,21 @@
 
 - (void)handleTimer:(NSTimer *)timer{
     timercount++;//时间计数自增
+    /**
+     *	12 / 14 温度测温完成以后跳转到保存温度的界面
+     */
+#warning ToDo -- 暂时定为三分钟测温
+    if (timercount >= 180) {
+        //开始传值
+        [GlobalTool sharedSingleton].receivedTempStr = TempStr;
+        [GlobalTool sharedSingleton].presentView = YES;//标记页面是测温页面跳转过去的
+        UIStoryboard *board = [UIStoryboard storyboardWithName:@"Second" bundle:nil];
+        AddMedicalRecordViewController *vc = [board instantiateViewControllerWithIdentifier:@"AddMedicalRecordViewController"];
+        MedicalRecordNavigationController *nav = [[MedicalRecordNavigationController alloc] initWithRootViewController:vc];
+        [self presentViewController:nav animated:YES completion:nil];
+
+    }
+    
     int m = timercount / 60;
     int h = m / 60;
     int s = timercount % 60;
@@ -450,13 +469,19 @@
     [SVProgressHUD showWithStatus:@"正在获取温度..."];
     [_cbCentralManager stopScan];//关闭搜索,非常重要!
     
-    _timer = [NSTimer scheduledTimerWithTimeInterval: 1
-                                              target: self
-                                            selector: @selector(handleTimer:)  //这个方法就是每秒一次获取体温数据
-                                            userInfo: nil
-                                             repeats: YES];
+    [_timer setFireDate:[NSDate date]];//继续
+    if (timercount == 0) {
+        _timer = [NSTimer scheduledTimerWithTimeInterval: 1
+                                                  target: self
+                                                selector: @selector(handleTimer:)  //这个方法就是每秒一次获取体温数据
+                                                userInfo: nil
+                                                 repeats: YES];
+    }
     [peripheral setDelegate:self];
     [peripheral discoverServices: @[[CBUUID UUIDWithString:USERDEF_SERV_UUID]]];
+    
+    //添加透明视图
+    [self addMaskView];
 }
 
 //连接外围设备失败
@@ -467,6 +492,7 @@
     [_timer setFireDate:[NSDate distantFuture]];
     
     press = NO;
+    [self removeMaskView];
 }
 -(void)cleanup{
     if (_testPeripheral.state != CBPeripheralStateConnected) {
@@ -517,10 +543,12 @@
         //每次中断就设置为0
         researchTime = 0;
         [researchTimer setFireDate:[NSDate distantPast]];//计时开始
+        [self startResearchTime];
         [self SearchDevice];//失败再重试
         [_cbCentralManager connectPeripheral:peripheral options:nil];
-        
     }
+    
+    [self removeMaskView];
 }
 
 #pragma mark - UIAlerVIew
@@ -643,6 +671,16 @@
             TempStr =[NSString stringWithFormat:@"%.1f",a];//
             [SVProgressHUD dismiss];
             
+            /**
+             *	温度值和设定的最高最低温度值去比较
+             */
+            if (a * 10 > max) {
+                [SVProgressHUD showInfoWithStatus:@"您的体温高于最高温度！"];
+            }else if (a * 10 < min){
+                [SVProgressHUD showInfoWithStatus:@"您的体温低于最低温度！"];
+            }
+            
+            
             [self updateTemperture];
             /**
              *	11/24新增了折线图
@@ -655,17 +693,17 @@
 //            textView.text = totalStr;
 //            NSLog(@"text.text  %@",textView.text);
             
-            AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
-            NSMutableDictionary *dic = [NSMutableDictionary dictionary];
-            dic[@"member_id"] = @1;
-            dic[@"temperature"] = [NSString stringWithFormat:@"%f",a];
-            dic[@"date"] = [NSString stringWithFormat:@"%d",(int)[[NSDate date] timeIntervalSince1970]];
-            dic[@"type"] = @"bluetooth";
-            [manager POST:@"http://120.24.174.207/api.php?m=open&c=bluetooth&a=addTemperature" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
-                NSLog(@"success");
-            } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-                NSLog(@"%@",error);
-            }];
+//            AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
+//            NSMutableDictionary *dic = [NSMutableDictionary dictionary];
+//            dic[@"member_id"] = @1;
+//            dic[@"temperature"] = [NSString stringWithFormat:@"%f",a];
+//            dic[@"date"] = [NSString stringWithFormat:@"%d",(int)[[NSDate date] timeIntervalSince1970]];
+//            dic[@"type"] = @"bluetooth";
+//            [manager POST:@"http://120.24.174.207/api.php?m=open&c=bluetooth&a=addTemperature" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
+//                NSLog(@"success");
+//            } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+//                NSLog(@"%@",error);
+//            }];
         }
     }
 }
@@ -781,10 +819,13 @@
         [_testPeripheral writeValue:data forCharacteristic:_centralCharacteristic type:CBCharacteristicWriteWithResponse];
     }
     [researchTimer setFireDate:[NSDate distantFuture]];
+    [researchTimer invalidate];
+    researchTimer = nil;
     [_timer invalidate];
     _timer = nil;
     [self performSelector:@selector(breakUp) withObject:self afterDelay:2];
     
+    [self removeMaskView];
 }
 - (void)breakUp{
     //然后判断是不是已经在连接
@@ -809,6 +850,21 @@
     // Dispose of any resources that can be recreated.
 }
 
+
+/**
+ *	12 / 16 添加 / 移除透明层
+ */
+- (void)addMaskView {
+    maskViewOne = [[UIView alloc] initWithFrame:CGRectMake(0, 0, kScreen_Width, 64)];
+    maskViewTwo = [[UIView alloc] initWithFrame:CGRectMake(0, kScreen_Height - 49, kScreen_Width, 49)];
+    maskViewOne.backgroundColor = maskViewTwo.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:maskViewOne];
+    [self.view addSubview:maskViewTwo];
+}
+-(void)removeMaskView {
+    [maskViewOne removeFromSuperview];
+    [maskViewTwo removeFromSuperview];
+}
 /*
 #pragma mark - Navigation
 

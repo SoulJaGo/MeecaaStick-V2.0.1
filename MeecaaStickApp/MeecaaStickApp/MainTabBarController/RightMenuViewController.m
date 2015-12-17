@@ -147,9 +147,17 @@
         UIViewController *vc = [board instantiateViewControllerWithIdentifier:@"ProblemNavigationController"];
         [self presentViewController:vc animated:NO completion:nil];
     } else if (indexPath.row == 3) {
-        MessageViewController *messageVc = [[MessageViewController alloc] init];
-        MessageNavigationController *nav = [[MessageNavigationController alloc] initWithRootViewController:messageVc];
-        [self presentViewController:nav animated:NO completion:nil];
+        if (![[DatabaseTool shared] getDefaultMember]) {
+            UIStoryboard *board = [UIStoryboard storyboardWithName:@"First" bundle:nil];
+            UIViewController *loginVc = [board instantiateViewControllerWithIdentifier:@"LoginViewController"];
+            [self presentViewController:loginVc animated:NO completion:^{
+                [SVProgressHUD showErrorWithStatus:@"请您先登录!"];
+            }];
+        } else {
+            MessageViewController *messageVc = [[MessageViewController alloc] init];
+            MessageNavigationController *nav = [[MessageNavigationController alloc] initWithRootViewController:messageVc];
+            [self presentViewController:nav animated:NO completion:nil];
+        }
     }
     
 }

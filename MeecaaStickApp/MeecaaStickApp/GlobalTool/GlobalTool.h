@@ -24,6 +24,7 @@
  */
 + (id)shared;
 
++ (GlobalTool *)sharedSingleton;
 /**
  *  color转image
  */
@@ -64,4 +65,11 @@
  *  是否含非法字符
  */
 - (BOOL)isHaveIllegalChar:(NSString *)str;
+
+//向测温页面传值
+@property (nonatomic,retain)NSString *receivedTempStr;
+
+@property (nonatomic,retain)NSString *receivedDateStr;
+
+@property (nonatomic,assign) BOOL presentView;
 @end

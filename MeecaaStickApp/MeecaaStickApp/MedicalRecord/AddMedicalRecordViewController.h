@@ -9,5 +9,9 @@
 #import <UIKit/UIKit.h>
 
 @interface AddMedicalRecordViewController : UITableViewController
+@property (nonatomic,strong) NSString *receivedTempStr;
 
+@property (nonatomic,strong) NSString *receivedDateStr;
+
+@property (nonatomic,strong) NSString *presentView;
 @end

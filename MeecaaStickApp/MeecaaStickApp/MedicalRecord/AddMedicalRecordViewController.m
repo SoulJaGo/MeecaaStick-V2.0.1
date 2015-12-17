@@ -15,6 +15,9 @@
 #import "CollectionViewCell.h"
 #import "MainTabBarController.h"
 
+#import "MMDrawerController.h"
+#import "UseStickCheckViewController.h"
+
 @interface AddMedicalRecordViewController () <UITextFieldDelegate,UIActionSheetDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate,UICollectionViewDataSource,UICollectionViewDelegate,UICollectionViewDelegateFlowLayout>
 @property (nonatomic,strong) TimeLabelCell *timeLabelCell;
 @property (nonatomic,strong) UIDatePicker *datePicker;
@@ -41,6 +44,9 @@
 
 @property (nonatomic,strong) UIImagePickerController *ipc;
 @property (nonatomic,strong)UICollectionView *collectionView;
+
+
+@property (nonatomic,strong) MMDrawerController * drawerController;
 @end
 
 @implementation AddMedicalRecordViewController
@@ -49,7 +55,6 @@
     [super viewDidLoad];
     //设置Nav
     [self setupNav];
-    
     
     self.photosArray = [NSMutableArray array];
 }
@@ -541,7 +546,20 @@
  *  返回上级
  */
 - (void)goBack {
-    [self.navigationController popToRootViewControllerAnimated:YES];
+    if ([GlobalTool sharedSingleton].presentView == 1) {
+        MainTabBarController *mainTabBarC = [[MainTabBarController alloc] init];
+        LeftMenuViewController *leftMenuVc = [[LeftMenuViewController alloc] init];
+        RightMenuViewController *rightMenuVc = [[RightMenuViewController alloc] init];
+        self.drawerController = [[MMDrawerController alloc] initWithCenterViewController:mainTabBarC leftDrawerViewController:leftMenuVc rightDrawerViewController:rightMenuVc];
+        [self.drawerController setShowsShadow:NO];
+        [self.drawerController setMaximumRightDrawerWidth:200];
+        [self.drawerController setMaximumLeftDrawerWidth:200];
+        [self presentViewController:self.drawerController animated:NO completion:^{
+            [GlobalTool sharedSingleton].presentView = NO;
+        }];
+    }else {
+        [self.navigationController popToRootViewControllerAnimated:YES];
+    }
 }
 
 - (void)didReceiveMemoryWarning {
@@ -572,6 +590,11 @@
         TemperatureLabelCell *temperatureLabelCell = [tableView dequeueReusableCellWithIdentifier:@"TemperatureLabelCell"];
         temperatureLabelCell.temperatureTextField.delegate = self;
         self.temperatureLabelCell = temperatureLabelCell;
+        self.temperatureLabelCell.temperatureTextField.text = [GlobalTool sharedSingleton].receivedTempStr;
+        if ([GlobalTool sharedSingleton].presentView == 0) {
+            NSLog(@"234");
+            self.temperatureLabelCell.temperatureTextField.text = nil;
+        }
         return temperatureLabelCell;
     } else if (indexPath.section == 2) {
         SymptomCell *symptomCell = [tableView dequeueReusableCellWithIdentifier:@"SymptomCell"];

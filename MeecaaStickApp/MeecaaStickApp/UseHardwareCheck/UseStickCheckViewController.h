@@ -8,6 +8,11 @@
 
 #import <UIKit/UIKit.h>
 
+#import "HomeViewController.h"
+
 @interface UseStickCheckViewController : UIViewController
+
+//@property (nonatomic,retain) HomeViewController *homeVC;
+//@property(nonatomic,retain) UIViewController *homeVC;
 
 @end

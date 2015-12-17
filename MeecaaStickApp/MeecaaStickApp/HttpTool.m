@@ -110,22 +110,22 @@ typedef enum
 /**
  *  监测最新的版本
  */
-- (NSMutableDictionary *)getLastVersion {
-    NSString *urlStr = [HOST stringByAppendingString:@"api.php?m=open&c=version&a=index&device=ios"];
-    NSURL *url = [NSURL URLWithString:urlStr];
-    NSURLRequest *request = [NSURLRequest requestWithURL:url];
-    AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
-    [operation start];
-    [operation waitUntilFinished];
-    NSError *error = nil;
-    NSMutableDictionary *resultDict = [NSJSONSerialization JSONObjectWithData:operation.responseData options:NSJSONReadingAllowFragments error:&error];
-    if (error) {
-        NSLog(@"%@",error);
-        return nil;
-    } else {
-        return resultDict;
-    }
-}
+//- (NSMutableDictionary *)getLastVersion {
+//    NSString *urlStr = [HOST stringByAppendingString:@"api.php?m=open&c=version&a=index&device=ios"];
+//    NSURL *url = [NSURL URLWithString:urlStr];
+//    NSURLRequest *request = [NSURLRequest requestWithURL:url];
+//    AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
+//    [operation start];
+//    [operation waitUntilFinished];
+//    NSError *error = nil;
+//    NSMutableDictionary *resultDict = [NSJSONSerialization JSONObjectWithData:operation.responseData options:NSJSONReadingAllowFragments error:&error];
+//    if (error) {
+//        NSLog(@"%@",error);
+//        return nil;
+//    } else {
+//        return resultDict;
+//    }
+//}
 
 - (void)LoginWithPhoneNumber:(NSString *)phoneNumber Password:(NSString *)password
 {
